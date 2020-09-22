@@ -125,26 +125,47 @@ and run it with
 python app.py
 ```
 
-# Authentication and Authorization/Access Control
+# securing a Dash app
 
-Authentication is the first step: make sure each user has access to the web application.
+**Authentication** is the first step: making sure each user has logged in before showing 
+them any content. 
 
-Next is authorization, which can mean many things: the user is *authorized* to perform
-some action; the user is *authorized* to see some content. "Authentication" and "authorization"
-sound too similar, so I will give it a different name: "access control".
+**Authorization** is next: the user must be *authorized* to perform
+some action or to see some content. "Authentication" and "authorization"
+sound too similar, so dash-access uses the term **access control**.
 
-dash-access has two main ideas: the **grant** and the **group**. Grants are 
-permissions - a *relationship* granting some *principal* access to some *permission*. 
-Groups are collections of **grants**. Groups can be *granted* to other groups. Users
-are then added to groups, or granted permissions directly
-A common dash-access pattern is granting permissions to a group and 
+## key ideas
+
+dash-access has two main ideas: the **permission** and the **group**. 
+- **permission**: allows some **principal** to access some controlled asset
+- **group**: a collection of **permissions**
+
+The interaction between those two create a few more key terms:
+- **principal**: an entity (user, group)
+- **grant**: giving a principal access to a permission
+- **relationship**: the stored link between the principal and the granted permission
+- **inherits**: a group can be *granted* another group, thus *inheriting* its permissions
+
+### group inheritance
+
+Group inheritance allows groups to fullfill the policy, role, and 
+group functions of traditional RBAC. Most access control problems in Dash
+are simple enough, and most applications small enough, that adding
+the additional levels of policy and role make reasoning more rather than 
+less complex.
+
+A common pattern is granting permissions to a group and 
 granting that group to another group to create tiers of access among users.
 
-Permissions are **blind**, which means that they don't exist outside of being
-granted to *principals*. A permission is just a string name, and principals 
-are granted permissions with relationships. In the example, `level1` and `level2`
-are arbitrary permission names. `level1` has been granted to the user `test`, but 
-`level2` has not been granted, so anything requiring it will not be shown to user `test`.
+### permission blindness
+
+In dash-access, a permission is **blind**: it doesn't exist outside of 
+being granted to a group or user. A permission does not need to be 
+registered or saved anywhere - it is just a string name. 
+
+In the example, `level1` and `level2` are arbitrary permission names. 
+`level1` has been granted to the user `test`, but `level2` has 
+not been granted, so anything requiring it will not be shown to user `test`.
 
 Relationships are the secret sauce of `dash_access`: each permission is defined
 as a relationship where a principal is granted a permission of some kind. A user-permission
