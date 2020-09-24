@@ -15,6 +15,7 @@ setup(
     packages = find_packages(),
     install_requires = [
         'Flask-Login==0.5.0',
+        'msgpack',
     ],
     classifiers=[
         'Development Status :: 3 - Alpha',

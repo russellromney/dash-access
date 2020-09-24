@@ -1,13 +1,6 @@
-# external imports
-import decimal
-from functools import wraps
-import datetime
 from flask_login import current_user
-from dash.development.base_component import Component
 
-# local imports
-import dash_core_components as dcc
-import dash_html_components as html
+# internal
 from dash_access.access.data import data_access
 from dash_access.access import user
 

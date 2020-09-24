@@ -1,14 +1,11 @@
-# external imports
 from typing import Iterable
-import functools
 import msgpack
 import psycopg2
 import os
-import decimal
-from boto3.dynamodb.types import Binary
-from functools import wraps
+import functools
 import datetime
 
+# internal
 from dash_access.clients.base import BaseAccessStore
 
 
@@ -262,12 +259,8 @@ class PostgresAccessStore(BaseAccessStore):
         # SELECT TABLE
         this_table = self.get_table(table)
 
-        # PROCESS VALUES - NO DYNAMO TYPES
+        # PROCESS VALUES
         out = {k: self.encode(value) for k, value in val.items()}
-        out = {
-            k: (float(value) if isinstance(value, decimal.Decimal) else value)
-            for k, value in out.items()
-        }
 
         ###########################################################
         ## INSERT OR UPDATE THE RECORD IN THE DATABASE
@@ -353,12 +346,8 @@ class PostgresAccessStore(BaseAccessStore):
         # SELECT TABLE
         this_table = self.get_table(table)
 
-        # PROCESS VALUES - UNDO DYNAMO DATA TYPES
+        # PROCESS VALUES
         out = {key: self.encode(value) for key, value in kwargs.items()}
-        out = {
-            key: (float(value) if isinstance(value, decimal.Decimal) else value)
-            for key, value in out.items()
-        }
 
         db = self.db
         cur = db.cursor()

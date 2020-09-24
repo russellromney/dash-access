@@ -1,8 +1,6 @@
-# external imports
-import uuid
 import datetime
 
-# local imports
+# internal
 from dash_access.clients.base import BaseAccessStore
 from dash_access.access.relationship_objects import Grant as grant
 

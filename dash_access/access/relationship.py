@@ -5,6 +5,7 @@ users and groups.
 
 import datetime
 
+# internal
 from dash_access.clients.base import BaseAccessStore
 
 #################################################################################
@@ -50,36 +51,6 @@ def create(
             "ts": datetime.datetime.now().isoformat(),
         },
     )
-
-
-def helper_factory_create(principal_type: str, granted_type: str):
-    """
-    returns a helper function to create a relationship
-    between a given principal with a certain principal type
-    and a given granted with a certain granted type
-    """
-
-    def func(store: BaseAccessStore, principal: str, granted: str) -> list:
-        f"""
-        helper to create relationship between principal with type {principal_type}
-        and granted of type {granted_type}
-        """
-        return create(
-            store=store,
-            principal=principal,
-            principal_type=principal_type,
-            granted=granted,
-            granted_type=granted_type,
-        )
-
-    return func
-
-
-user_group_create = helper_factory_create("user", "group")
-user_permission_create = helper_factory_create("user", "permission")
-group_group_create = helper_factory_create("group", "group")
-group_permission_create = helper_factory_create("group", "permission")
-
 
 def exists(
     store: BaseAccessStore,

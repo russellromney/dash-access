@@ -1,7 +1,5 @@
 import os
 import msgpack
-import decimal
-import time
 
 
 class BaseAccessStore(object):
