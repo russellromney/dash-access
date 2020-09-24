@@ -3,12 +3,12 @@ from setuptools import setup, find_packages
 
 setup(
     name = 'dash-access',
-    version = '0.0.1',
+    version = '0.0.2',
     description = 'Granular access control for Dash',
     long_description = 'A simple, granular access control system for Dash, with object-oriented or API-based approaces',
     keywords = 'dash callbacks plotly access authorization authentication flask python flask-login python3 user-access',
     url = 'https://github.com/russellromney/dash-access',
-    download_url = 'https://github.com/russellromney/dash-access/archive/v0.0.1.tar.gz',
+    download_url = 'https://github.com/russellromney/dash-access/archive/v0.0.2.tar.gz',
     author = 'Russell Romney',
     author_email = 'russellromney@gmail.com',
     license = 'MIT',
