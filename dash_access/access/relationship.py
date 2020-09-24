@@ -7,6 +7,13 @@ import datetime
 
 from dash_access.clients.base import BaseAccessStore
 
+class DashAccessEntity(object):
+    def init(self, name: str, principal_type: str, parent: str=None, parent_type: str=None):
+        self.name = name
+        self.type = principal_type
+        self.parent = parent_name
+        self.parent_type = parent_type
+    
 
 def create(
     store: BaseAccessStore,
