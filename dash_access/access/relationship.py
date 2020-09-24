@@ -10,6 +10,22 @@ from dash_access.clients.base import BaseAccessStore
 #################################################################################
 ### OPERATIONAL FUNCTIONALITY
 #################################################################################
+def _type_check(value, value_type, name):
+    """
+    shortcut to type check with helpful ValueError
+    """
+    if not isinstance(value, value_type):
+        raise TypeError(f"Incorrect {name}, should be {type}")
+
+
+def _value_check(value, okay: list, name):
+    """
+    shortcut to value check with helpful ValueError
+    """
+    if not value in okay:
+        raise TypeError(f"Incorrect {name}, needs to be one of {str(okay)}")
+
+
 def create(
     store: BaseAccessStore,
     principal: str,

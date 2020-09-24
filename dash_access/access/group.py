@@ -4,7 +4,7 @@ import datetime
 
 # local imports
 from dash_access.clients.base import BaseAccessStore
-from dash_access.access import relationship
+from dash_access.access.relationship_objects import Grant as  grant
 
 
 def get(store: BaseAccessStore, name: str) -> dict:
@@ -71,8 +71,8 @@ def add(
 
     # DEFINE THE GROUP-USER RELATIONSHIPS
     for x in users:
-        if not relationship.Grant.group(name).to.user(x).exists(store):
-            relationship.Grant.group(name).to.user(x).create(store)
+        if not grant.group(name).to.user(x).exists(store):
+            grant.group(name).to.user(x).create(store)
 
     # DEFINE THE GROUP-GROUP INHERITS RELATIONSHIPS
     add_inherits(store, name, inherits=inherits)
@@ -124,8 +124,8 @@ def add_inherits(store: BaseAccessStore, name: str, inherits: list = []) -> bool
     if not exists(store,name):
         return None
     for gname in inherits:
-        if not relationship.Grant.group(gname).to.group(name):
-            relationship.Grant.group(gname).to.group(name).create(store)
+        if not grant.group(gname).to.group(name):
+            grant.group(gname).to.group(name).create(store)
     return True
 
 
@@ -133,15 +133,15 @@ def remove_inherits(store: BaseAccessStore, name: str, remove: list=[]) -> bool:
     if not exists(store,name):
         return None
     for gname in remove:
-        relationship.Grant.group(gname).to.group(name).delete(store)
+        grant.group(gname).to.group(name).delete(store)
     return True
 
 def add_permissions(store: BaseAccessStore, name: str, permissions: list=[]) -> bool:
     if not exists(store,name):
         return None
     for x in permissions:
-        if not relationship.Grant.permission(x).to.group(name).exists(store):
-            relationship.Grant.permission(x).to.group(name).create(store)
+        if not grant.permission(x).to.group(name).exists(store):
+            grant.permission(x).to.group(name).create(store)
     return True
 
 
@@ -149,7 +149,7 @@ def remove_permissions(store: BaseAccessStore, name: str, permissions: list=[]) 
     if not exists(store,name):
         return None
     for x in permissions:
-        relationship.Grant.permission(x).to.group(name).delete(store)
+        grant.permission(x).to.group(name).delete(store)
     return True
 
 
@@ -157,8 +157,8 @@ def add_users(store: BaseAccessStore, name: str, users: list=[]) -> bool:
     if not exists(store,name):
         return None
     for x in users:
-        if not relationship.Grant.group(name).to.user(x).exists(store):
-            relationship.Grant.group(name).to.user(x)
+        if not grant.group(name).to.user(x).exists(store):
+            grant.group(name).to.user(x)
     return True
 
 
@@ -166,7 +166,7 @@ def remove_users(store: BaseAccessStore, name: str, users: list=[]) -> bool:
     if not exists(store,name):
         return None
     for x in users:
-        relationship.Grant.group(name).to.user(x).delete(store)
+        grant.group(name).to.user(x).delete(store)
     return True
 
 
@@ -180,7 +180,7 @@ def inherits(store: BaseAccessStore, name: str, already: list = []) -> list:
     if record is None:
         return already
 
-    this_inherits = relationship.Grant.group(name).groups(store)
+    this_inherits = grant.group(name).groups(store)
     new_inherits = []
     for gname in this_inherits:
         if gname in already:

@@ -64,19 +64,19 @@ with server.app_context():
     group.add(sq, name="top",permissions=["classified"],inherits=["mid"])
     
     
-    admin = User(id='admin',name='admin',)
+    admin = User(id='admin',name='admin')
     admin.set_password("test")
     admin.add_group("all")
     
-    employee = User(id='employee',name='employee',)
+    employee = User(id='employee',name='employee')
     employee.set_password("test")
     employee.add_group("entry")
     
-    manager = User(id='manager',name='manager',)
+    manager = User(id='manager',name='manager')
     manager.set_password("test")
     manager.add_group("mid")
     
-    executive = User(id='executive',name='executive',)
+    executive = User(id='executive',name='executive')
     executive.set_password("test")
     executive.add_group("top")
     

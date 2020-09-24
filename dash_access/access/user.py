@@ -8,42 +8,43 @@ import mailjet_rest
 
 # local imports
 from dash_access.auth.pw import generate_password_hash
-from dash_access.access import group, control, relationship
+from dash_access.access import group
+from dash_access.access.relationship_objects import Grant, Principal
 from dash_access.clients.base import BaseAccessStore
 
 
 def add_groups(store: BaseAccessStore, user_id: str, groups: list) -> bool:
     """create user-group relationship(s)"""
     for x in groups:
-        if not relationship.user_group_exists(store, user_id, x):
-            relationship.user_group_create(store, user_id, x)
+        if not Grant.group(x).to.user(user_id).exists(store):
+            Grant.group(x).to.user(user_id).create(store)
     return True
 
 
 def remove_groups(store: BaseAccessStore, user_id: str, groups: list) -> bool:
     """remove all user-group relationship(s)"""
     for x in groups:
-        relationship.user_group_delete(store, user_id, x)
+        Grant.group(x).to.user(user_id).create(store)
     return True
 
 
 def add_permissions(store: BaseAccessStore, user_id: str, permissions: list) -> bool:
     """create user-permission relationship(s)"""
     for x in permissions:
-        relationship.user_permission_create(store, user_id, x)
+        Grant.permission(x).to.user(user_id).create(store)
     return True
 
 
 def remove_permissions(store: BaseAccessStore, user_id: str, permissions: list) -> bool:
     """remove user-permission relationship"""
     for x in permissions:
-        relationship.user_permission_delete(store, user_id, x)
+        Grant.permission(x).to.user(user_id).create(store)
     return True
 
 
 def groups(store: BaseAccessStore, user_id: str) -> list:
     """get all the user-group relationships"""
-    this_user_groups = relationship.user_group_all(store, user_id)
+    this_user_groups = Principal.user(user_id).groups(store)
 
     # recursively follow each group's inheritance trail
     # add each group's trail to the user's list of groups
@@ -64,12 +65,12 @@ def permissions(store: BaseAccessStore, user_id: str) -> list:
     then, combine the user's direct permissions with each group's granted permissions
     return that combined list
     """
-    user_permissions = relationship.user_permission_all(store, user_id)
-    user_groups = groups(store, user_id)
+    user_permissions = Principal.user(user_id).permissions(store)
+    user_groups = Principal.user(user_id).groups(store)
 
     group_permissions = []
     for gname in user_groups:
-        this_group_permissions = group.permissions(store, gname)
+        this_group_permissions = Principal.group(gname).permissions(store)
         group_permissions.extend(this_group_permissions)
     all_user_permissions = list(set([*user_permissions, *group_permissions]))
     return all_user_permissions
@@ -115,7 +116,7 @@ def has_access(store: BaseAccessStore, user_id: str = None, permission: str = No
         return None
 
     # DOES THE USER HAVE ACCESS TO THE permission?
-    user_permissions = permissions(store, user_id)
+    user_permissions = Principal.user(user_id).permissions(store)
     specific_permission = permission in user_permissions
     all_permissions = "*" in user_permissions
     user_has_access = specific_permission or all_permissions
