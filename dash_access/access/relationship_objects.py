@@ -21,10 +21,10 @@ def _value_check(value, okay: list, name):
 
 
 def _checks(
-    principal: str=None,
-    principal_type: str=None,
-    granted: str=None,
-    granted_type: str=None,
+    principal: str = None,
+    principal_type: str = None,
+    granted: str = None,
+    granted_type: str = None,
 ):
     if principal:
         _type_check(principal, str, "principal")
@@ -36,22 +36,6 @@ def _checks(
     if granted_type:
         _type_check(granted_type, str, "granted_type")
         _value_check(granted_type, ["group", "permission"], "granted_type")
-
-
-class OperationalPrincipalAll(object):
-    """
-    get all values for a given principal's relationships
-    """
-
-    def __init__(self, principal: str, principal_type: str, granted_type: str):
-        _checks(
-            principal=principal,
-            principal_type=principal_type,
-            granted=granted,
-            granted_type=granted_type,
-        )
-        self.principal = principal
-        self.principal_type = principal_type
 
 
 class OperationPrincipal(object):

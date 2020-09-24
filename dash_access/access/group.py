@@ -4,7 +4,7 @@ import datetime
 
 # local imports
 from dash_access.clients.base import BaseAccessStore
-from dash_access.access.relationship_objects import Grant as  grant
+from dash_access.access.relationship_objects import Grant as grant
 
 
 def get(store: BaseAccessStore, name: str) -> dict:
@@ -20,13 +20,13 @@ def get(store: BaseAccessStore, name: str) -> dict:
         else None
     """
     group = store.get(name, table="groups")
-    if group in ([],None):
+    if group in ([], None):
         return None
     return group
 
 
 def get_all(store: BaseAccessStore) -> list:
-    return store.get_all('groups')
+    return store.get_all("groups")
 
 
 def put(store: BaseAccessStore, name: str, record: dict) -> bool:
@@ -59,13 +59,10 @@ def add(
         return False
 
     # do it
-    record = {
-        "id": name,
-        "update_ts": datetime.datetime.now().isoformat(),
-    }
+    record = {"id": name, "update_ts": datetime.datetime.now().isoformat()}
     # CREATE THE GROUP
     res = put(store, name, record)
-    
+
     # DEFINE THE GROUP-PERMISSION RELATIONSHIPS
     add_permissions(store, name, permissions=permissions)
 
@@ -96,8 +93,8 @@ def change_name(store: BaseAccessStore, name: str, new_name: str) -> bool:
 
     if exists(store, new_name):
         return False
-    
-    record['name'] = new_name
+
+    record["name"] = new_name
     put(store, name, record)
     return True
 
@@ -121,7 +118,7 @@ def duplicate(store: BaseAccessStore, name: str, new_name: str) -> bool:
 
 
 def add_inherits(store: BaseAccessStore, name: str, inherits: list = []) -> bool:
-    if not exists(store,name):
+    if not exists(store, name):
         return None
     for gname in inherits:
         if not grant.group(gname).to.group(name):
@@ -129,15 +126,16 @@ def add_inherits(store: BaseAccessStore, name: str, inherits: list = []) -> bool
     return True
 
 
-def remove_inherits(store: BaseAccessStore, name: str, remove: list=[]) -> bool:
-    if not exists(store,name):
+def remove_inherits(store: BaseAccessStore, name: str, remove: list = []) -> bool:
+    if not exists(store, name):
         return None
     for gname in remove:
         grant.group(gname).to.group(name).delete(store)
     return True
 
-def add_permissions(store: BaseAccessStore, name: str, permissions: list=[]) -> bool:
-    if not exists(store,name):
+
+def add_permissions(store: BaseAccessStore, name: str, permissions: list = []) -> bool:
+    if not exists(store, name):
         return None
     for x in permissions:
         if not grant.permission(x).to.group(name).exists(store):
@@ -145,16 +143,18 @@ def add_permissions(store: BaseAccessStore, name: str, permissions: list=[]) -> 
     return True
 
 
-def remove_permissions(store: BaseAccessStore, name: str, permissions: list=[]) -> bool:
-    if not exists(store,name):
+def remove_permissions(
+    store: BaseAccessStore, name: str, permissions: list = []
+) -> bool:
+    if not exists(store, name):
         return None
     for x in permissions:
         grant.permission(x).to.group(name).delete(store)
     return True
 
 
-def add_users(store: BaseAccessStore, name: str, users: list=[]) -> bool:
-    if not exists(store,name):
+def add_users(store: BaseAccessStore, name: str, users: list = []) -> bool:
+    if not exists(store, name):
         return None
     for x in users:
         if not grant.group(name).to.user(x).exists(store):
@@ -162,8 +162,8 @@ def add_users(store: BaseAccessStore, name: str, users: list=[]) -> bool:
     return True
 
 
-def remove_users(store: BaseAccessStore, name: str, users: list=[]) -> bool:
-    if not exists(store,name):
+def remove_users(store: BaseAccessStore, name: str, users: list = []) -> bool:
+    if not exists(store, name):
         return None
     for x in users:
         grant.group(name).to.user(x).delete(store)
@@ -187,7 +187,11 @@ def inherits(store: BaseAccessStore, name: str, already: list = []) -> list:
             pass
         else:
             new_inherits.extend(
-                list(set([gname, *inherits(store, name=gname, already=[*already, gname])]))
+                list(
+                    set(
+                        [gname, *inherits(store, name=gname, already=[*already, gname])]
+                    )
+                )
             )
 
     out = list(set([*new_inherits, *already]))

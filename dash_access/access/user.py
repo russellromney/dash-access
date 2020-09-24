@@ -93,7 +93,9 @@ def permission_access(
     return permission_insert
 
 
-def has_access(store: BaseAccessStore, user_id: str = None, permission: str = None) -> bool:
+def has_access(
+    store: BaseAccessStore, user_id: str = None, permission: str = None
+) -> bool:
     """
     does the given user have direct or indirect relationship with the permission?
 
@@ -116,7 +118,7 @@ def has_access(store: BaseAccessStore, user_id: str = None, permission: str = No
         return None
 
     # DOES THE USER HAVE ACCESS TO THE permission?
-    user_permissions = Principal.user(user_id).permissions(store)
+    user_permissions = permissions(store, user_id)
     specific_permission = permission in user_permissions
     all_permissions = "*" in user_permissions
     user_has_access = specific_permission or all_permissions
@@ -150,6 +152,7 @@ class AccessUserMixin(object):
         if current_user.access.has_access("some_permission"):
             ...
     """
+
     @property
     def store(self):
         return self.__access_store__

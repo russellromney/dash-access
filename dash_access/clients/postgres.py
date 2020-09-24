@@ -1,4 +1,3 @@
-
 # external imports
 from typing import Iterable
 import functools
@@ -11,6 +10,7 @@ from functools import wraps
 import datetime
 
 from dash_access.clients.base import BaseAccessStore
+
 
 def tables():
     return {
@@ -49,21 +49,23 @@ def tables():
         """,
     }
 
+
 def create_tables(db):
     cur = db.cursor()
-    for k,v in tables().items():
+    for k, v in tables().items():
         cur.execute(v)
         db.commit()
-        print("CREATED POSTGRES TABLE:",k)
+        print("CREATED POSTGRES TABLE:", k)
     cur.close()
     return True
+
 
 def drop_tables(db):
     cur = db.cursor()
     for t in tables():
         cur.execute(f"drop table if exists {t}")
         db.commit()
-        print("DROPPED POSTGRES TABLE:",t)
+        print("DROPPED POSTGRES TABLE:", t)
     cur.close()
     return True
 
@@ -77,9 +79,10 @@ def admin_log(func):
     the operation (dict) and the actual output
     this logs the operation to the admin table and returns the actual result
     """
+
     @functools.wraps(func)
-    def wrapper(self,*args,**kwargs):
-        table, operation, values, where, out = func(self, *args,**kwargs)
+    def wrapper(self, *args, **kwargs):
+        table, operation, values, where, out = func(self, *args, **kwargs)
         # LOG TO ADMIN EVENTS LOG
         table = self.get_table("admin_events")
         cursor = self.db.cursor()
@@ -88,17 +91,18 @@ def admin_log(func):
             values (%s,%s,%s,%s,%s)
         """
         cursor.execute(
-            statement, 
+            statement,
             (
                 datetime.datetime.now().isoformat(),
                 table,
                 operation,
                 msgpack.dumps(values),
                 msgpack.dumps(where),
-            )
+            ),
         )
         self.db.commit()
         return out
+
     return wrapper
 
 
@@ -108,6 +112,7 @@ class PostgresAccessStore(BaseAccessStore):
 
     uses sqlite3 to mock DynamoDB interaction
     """
+
     def __init__(self, db):
         self.instantiate(db)
 
@@ -121,11 +126,13 @@ class PostgresAccessStore(BaseAccessStore):
 
     def get_table(self, table):
         tables = {
-            "users": os.environ.get("USERS_TABLE", 'users'),
+            "users": os.environ.get("USERS_TABLE", "users"),
             "groups": os.environ.get("GROUPS_TABLE", "groups"),
-            "relationships": os.environ.get("RELATIONSHIPS_TABLE",'relationships'),
-            "admin_events": os.environ.get("ADMIN_EVENTS_TABLE",'admin_events'),
-            "access_events": os.environ.get("LOGGING_TABLE_ACCESS_EVENTS","access_events"),
+            "relationships": os.environ.get("RELATIONSHIPS_TABLE", "relationships"),
+            "admin_events": os.environ.get("ADMIN_EVENTS_TABLE", "admin_events"),
+            "access_events": os.environ.get(
+                "LOGGING_TABLE_ACCESS_EVENTS", "access_events"
+            ),
         }
         out = tables.get(table)
         if not table:
@@ -138,7 +145,7 @@ class PostgresAccessStore(BaseAccessStore):
         if isinstance(x, memoryview):
             return msgpack.loads(x.tobytes())
         return x
-    
+
     def _encode(self, x):
         if isinstance(x, dict) or isinstance(x, list):
             return msgpack.dumps(x)
@@ -174,7 +181,7 @@ class PostgresAccessStore(BaseAccessStore):
         out = cur.fetchall()
         cur.close()
 
-        if isinstance(out, Iterable) and len(out)==0:
+        if isinstance(out, Iterable) and len(out) == 0:
             return []
         if out is not None and out != [()]:
             out = dict(out)
@@ -187,8 +194,8 @@ class PostgresAccessStore(BaseAccessStore):
         else:
             out = None
         return out
-    
-    def _get_all(self, table: str, where: list=None) -> list:
+
+    def _get_all(self, table: str, where: list = None) -> list:
         """
         get all the values from a given table
         
@@ -205,48 +212,38 @@ class PostgresAccessStore(BaseAccessStore):
         table_fields = self.table_fields(table)
 
         cur = self.db.cursor()
-        
+
         if not where in (None, []):
             statement = f"""
                 select * from {self.get_table(table)}
                 where {where[0]["col"]} = %s
             """
-            ands = " ".join(
-                [
-                    f"""and {x['col']} = %s"""
-                    for x in where[1:]
-                ]
-            )
+            ands = " ".join([f"""and {x['col']} = %s""" for x in where[1:]])
             statement += ands
-            inputs = tuple([x['val'] for x in where])
-            cur.execute(
-                statement,
-                inputs
-            )
+            inputs = tuple([x["val"] for x in where])
+            cur.execute(statement, inputs)
             val = cur.fetchall()
         else:
             statement = f"""
                 select * from {self.get_table(table)}
             """
-            cur.execute(
-                statement
-            )
+            cur.execute(statement)
             val = cur.fetchall()
 
         if not val or val == [()]:
             return []
         out = [
-            {key: self.decode(value) for key,value in zip(table_fields.keys(),d)}
+            {key: self.decode(value) for key, value in zip(table_fields.keys(), d)}
             for d in val
         ]
-        
+
         # ADD DEFAULT FIELD VALUES FOR MISSING FIELDS
         for o in out:
             for field in table_fields:
                 if not field in o:
                     out[field] = table_fields[field]
         return out
-    
+
     @admin_log
     def _set(self, key: str, table: str, val: dict) -> bool:
         """
@@ -267,7 +264,10 @@ class PostgresAccessStore(BaseAccessStore):
 
         # PROCESS VALUES - NO DYNAMO TYPES
         out = {k: self.encode(value) for k, value in val.items()}
-        out = {k: (float(value) if isinstance(value, decimal.Decimal) else value) for k, value in out.items()}
+        out = {
+            k: (float(value) if isinstance(value, decimal.Decimal) else value)
+            for k, value in out.items()
+        }
 
         ###########################################################
         ## INSERT OR UPDATE THE RECORD IN THE DATABASE
@@ -275,19 +275,19 @@ class PostgresAccessStore(BaseAccessStore):
         cur = self.db.cursor()
 
         # IF THE RECORD EXISTS, UPDATE IT
-        cur.execute(f"select * from {this_table} where id=%s",(key,))
+        cur.execute(f"select * from {this_table} where id=%s", (key,))
         temp = cur.fetchone()
-        if not temp in ([],None):
+        if not temp in ([], None):
             print(temp)
             # EXCLUDE id FOR UPDATES
-            ID = out['id']
+            ID = out["id"]
             out = {k: v for k, v in out.items()}
             statement = f"""
                 update {this_table} 
                 set {','.join([f'{col}=%s' for col in out])}
                 where id = %s
             """
-            cur.execute(statement, tuple([*out.values(),ID]))
+            cur.execute(statement, tuple([*out.values(), ID]))
 
         # OTHERWISE INSERT THE NEW RECORD
         else:
@@ -303,7 +303,7 @@ class PostgresAccessStore(BaseAccessStore):
         return this_table, "set", out, None, True
 
     @admin_log
-    def _delete(self, key: str, table: str, where: list=None) -> bool:
+    def _delete(self, key: str, table: str, where: list = None) -> bool:
         """
         delete from the table; where optional
         
@@ -327,19 +327,11 @@ class PostgresAccessStore(BaseAccessStore):
                 delete from {self.get_table(table)}
                 where {where[0]["col"]} = %s
             """
-            ands = " ".join(
-                [
-                    f"""and {x['col']} = %s"""
-                    for x in where
-                ]
-            )
+            ands = " ".join([f"""and {x['col']} = %s""" for x in where])
             statement += ands
-            inputs = tuple([x['val'] for x in where])
+            inputs = tuple([x["val"] for x in where])
 
-            cur.execute(
-                statement,
-                inputs
-            )
+            cur.execute(statement, inputs)
         else:
             cur.execute(
                 f"""
@@ -385,5 +377,6 @@ class PostgresAccessStore(BaseAccessStore):
 
     def create_tables(self):
         return create_tables(self.db)
+
     def drop_tables(self):
         return drop_tables(self.db)

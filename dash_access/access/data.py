@@ -38,22 +38,24 @@ def data_access(asset):
         data = pd.read_csv(f'path/to/{some_field}/revenue.csv')
         return data
     """
+
     def decorated(f):
         def wrapper(*args, **kwargs):
-            if not hasattr(current_user,'id'):
+            if not hasattr(current_user, "id"):
                 # TODO add proper response
-                return None 
+                return None
 
             # CHECK USER ACCESS RIGHTS
             has_access = current_user.has_access(current_user.id, asset)
-            
+
             # RETURN IF USER DOES NOT HAVE ACCESS
             if not has_access:
                 return None
-            
+
             # RETURN FUNCTION AS NORMAL OTHERWISE
             else:
                 return f(*args, **kwargs)
 
         return wrapper
+
     return decorated

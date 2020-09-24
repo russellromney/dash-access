@@ -101,32 +101,6 @@ def exists(
     return res
 
 
-def helper_factory_exists(principal_type: str, granted_type: str):
-    """
-    returns a helper function for a given principal-granted pairing
-    """
-
-    def func(store: BaseAccessStore, principal: str, granted: str) -> bool:
-        f"""
-        helper to check if {principal_type}-{granted_type} relationship exists
-        """
-        return exists(
-            store=store,
-            principal=principal,
-            principal_type=principal_type,
-            granted=granted,
-            granted_type=granted_type,
-        )
-
-    return func
-
-
-user_group_exists = helper_factory_exists("user", "group")
-user_permission_exists = helper_factory_exists("user", "permission")
-group_group_exists = helper_factory_exists("group", "group")
-group_permission_exists = helper_factory_exists("group", "permission")
-
-
 def get_all(
     store: BaseAccessStore,
     principal: str = None,
@@ -157,34 +131,6 @@ def get_all(
     return [x["granted"] for x in val]
 
 
-def helper_factory_all(principal_type: str, granted_type: str):
-    """
-    returns a helper function to get all relationships
-    between a given principal with a certain principal type
-    and all grants of type granted_type
-    """
-
-    def func(store: BaseAccessStore, principal: str) -> list:
-        f"""
-        helper to get all relationships between principal with type {principal_type}
-        and grants of type {granted_type}
-        """
-        return get_all(
-            store=store,
-            principal=principal,
-            principal_type=principal_type,
-            granted_type=granted_type,
-        )
-
-    return func
-
-
-user_group_all = helper_factory_all("user", "group")
-user_permission_all = helper_factory_all("user", "permission")
-group_group_all = helper_factory_all("group", "group")
-group_permission_all = helper_factory_all("group", "permission")
-
-
 def delete(
     store: BaseAccessStore,
     principal: str,
@@ -202,35 +148,6 @@ def delete(
         key="-".join([principal, principal_type, granted, granted_type]),
         table="relationships",
     )
-
-
-def helper_factory_delete(principal_type: str, granted_type: str):
-    """
-    returns a helper function to delete a relationship
-    between a given principal with a certain principal type
-    and a given granted with a certain granted type
-    """
-
-    def func(store: BaseAccessStore, principal: str, granted: str) -> list:
-        f"""
-        helper to create relationship between principal with type {principal_type}
-        and granted of type {granted_type}
-        """
-        return delete(
-            store=store,
-            principal=principal,
-            principal_type=principal_type,
-            granted=granted,
-            granted_type=granted_type,
-        )
-
-    return func
-
-
-user_group_delete = helper_factory_delete("user", "group")
-user_permission_delete = helper_factory_delete("user", "permission")
-group_group_delete = helper_factory_delete("group", "group")
-group_permission_delete = helper_factory_delete("group", "permission")
 
 
 def delete_all(
@@ -291,29 +208,33 @@ def delete_all(
 
 
 def copy(
-    store: BaseAccessStore, copy_from: str, from_type: str, copy_to: str, to_type: str
+    store: BaseAccessStore,
+    from_principal: str,
+    from_principal_type: str,
+    to_principal: str,
+    to_principal_type: str,
 ) -> bool:
     """
-    copies a relationship from the copy_from to the copy_to
+    copies a relationship from the from_principal to the to_principal
     for the given types
     """
-    # print(f'copying from {from_type} {copy_from} to {to_type} {copy_to}')
+    # print(f'copying from {from_principal_type} {from_principal} to {to_principal_type} {to_principal}')
     # GET ALL THE RELATIONSHIPS
     from_relationships = store.get_all(
         table="relationships",
         where=[
-            {"col": "principal", "val": copy_from},
-            {"col": "principal_type", "val": from_type},
+            {"col": "principal", "val": from_principal},
+            {"col": "principal_type", "val": from_principal_type},
         ],
     )
 
     # SET THE NEW RELATIONSHIPS
     for ship in from_relationships:
-        # print(f'copying from {copy_from} to {copy_to}: {ship["granted_type"]} {ship["granted_type"]}')
+        # print(f'copying from {from_principal} to {to_principal}: {ship["granted_type"]} {ship["granted_type"]}')
         create(
             store=store,
-            principal=copy_to,
-            principal_type=to_type,
+            principal=to_principal,
+            principal_type=to_principal_type,
             granted=ship["granted"],
             granted_type=ship["granted_type"],
         )
@@ -321,24 +242,24 @@ def copy(
     return True
 
 
-def helper_factory_copy(from_type: str, to_type: str):
+def helper_factory_copy(from_principal_type: str, to_principal_type: str):
     """
     returns a helper function to copy a relationship(s)
     from a given principal with a certain type
     to a given principal with a certain type
     """
 
-    def func(store: BaseAccessStore, copy_from: str, copy_to: str) -> list:
+    def func(store: BaseAccessStore, from_principal: str, to_principal: str) -> list:
         f"""
-        helper to copy relationship between principals with type {from_type}
-        and granted of type {to_type}
+        helper to copy relationship between principals with type {from_principal_type}
+        and granted of type {to_principal_type}
         """
         return copy(
             store=store,
-            copy_from=copy_from,
-            from_type=from_type,
-            copy_to=copy_to,
-            to_type=to_type,
+            from_principal=from_principal,
+            from_principal_type=from_principal_type,
+            to_principal=to_principal,
+            to_principal_type=to_principal_type,
         )
 
     return func

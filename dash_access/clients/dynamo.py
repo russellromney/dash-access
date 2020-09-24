@@ -5,6 +5,7 @@ from boto3.dynamodb.types import Binary
 
 from clients.base import BaseAccessStore
 
+
 class DynamoStore(BaseAccessStore):
     """
     representation of a connection to a remote key:value store
@@ -88,17 +89,16 @@ class DynamoStore(BaseAccessStore):
         table = self.get_table(table)
 
         out = table.scan()
-        if out.get('Items'):
+        if out.get("Items"):
             out = [
                 {key: self.decode(value) for key, value in d.items()}
-                for d in out['Items']
+                for d in out["Items"]
             ]
             # ADD DEFAULT FIELD VALUES FOR MISSING FIELDS
             for o in out:
                 for field in table_fields:
                     if not field in o:
                         out[field] = table_fields[field]
-
 
         return []
 
@@ -172,7 +172,7 @@ class DynamoStore(BaseAccessStore):
 
     def delete(self, key: str, table: str) -> bool:
         return self._delete(key=key, table=table)
-    
+
     def _delete(self, key: str, table: str) -> bool:
         # SELECT TABLE
         table = self.get_table(table)
@@ -191,6 +191,7 @@ class DynamoLoggerStore(BaseAccessStore):
     Overwrite _insert, instantiate, etc. for inheritance.
     instantiate must take a path variable
     """
+
     def __init__(self, path: str = None):
         self.instantiate(path)
 
@@ -202,16 +203,17 @@ class DynamoLoggerStore(BaseAccessStore):
         self.access_table = resource.Table(self.ACCESS_TABLE)
 
     def get_table(self, table: str):
-        if table == 'access':
+        if table == "access":
             return self.access_table
-        elif table == 'login':
+        elif table == "login":
             return self.login_table
-        raise ValueError('LoggingStore: table must match login or access table in environment')
+        raise ValueError(
+            "LoggingStore: table must match login or access table in environment"
+        )
 
-    
     def insert(self, table: str, **kwargs):
         return self._insert(table=table, **kwargs)
-    
+
     def _insert(self, table: str, **kwargs):
         """
         insert values into a logging table

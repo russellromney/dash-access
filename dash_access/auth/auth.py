@@ -11,7 +11,6 @@ from access import user
 from auth.user import User
 
 
-
 def attempt_user_login(user_id: str = None, password: str = None):
     """
     Attempt to authenticate a user and log the attempt and outcome

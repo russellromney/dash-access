@@ -202,8 +202,7 @@ class Sqlite3AccessStore(BaseAccessStore):
 
         cur = self.db.cursor()
         val = cur.execute(
-            f"""select * from {self.get_table(table)} where id=?""",
-            (key,),
+            f"""select * from {self.get_table(table)} where id=?""", (key,)
         ).fetchone()
 
         out = val

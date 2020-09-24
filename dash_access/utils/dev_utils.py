@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from clients import sqlite3
 import dash_bootstrap_components as dbc
 
+
 def field_change_factory(field: str, put=None, get=None, hint=None):
     """
     Helper function to create change functions
@@ -29,12 +30,17 @@ def field_change_factory(field: str, put=None, get=None, hint=None):
     """
     # PUTFUNC CANNOT BE NONE
     if put is None:
-        raise ValueError('dev_utils.field_change_factory: arg "put" must be a put function like get(ID: str, record: dict)')
+        raise ValueError(
+            'dev_utils.field_change_factory: arg "put" must be a put function like get(ID: str, record: dict)'
+        )
     if get is None:
-        raise ValueError('dev_utils.field_change_factory: arg "get" must be a get function like get(ID: str)')
-    
+        raise ValueError(
+            'dev_utils.field_change_factory: arg "get" must be a get function like get(ID: str)'
+        )
+
     # NO TYPE HINT
     if hint is None:
+
         def func(_ID: str, value):
             record = get(_ID)
             if not record:
@@ -42,10 +48,12 @@ def field_change_factory(field: str, put=None, get=None, hint=None):
             record[field] = value
             res = put(_ID, record)
             return res
+
         return func
-    
+
     # WITH TYPE HINT
     else:
+
         def func(_ID: str, value: hint):
             record = get(_ID)
             if not record:
@@ -53,6 +61,7 @@ def field_change_factory(field: str, put=None, get=None, hint=None):
             record[field] = value
             res = put(_ID, record)
             return res
+
         return func
 
 
@@ -90,8 +99,8 @@ def id_factory(page: str):
             ...
         """
         return f"{page}-{_id}"
-    return func
 
+    return func
 
 
 def toast(chil: str, success):
@@ -103,28 +112,34 @@ def toast(chil: str, success):
         'info' -> 'info'
         'warning' -> 'warning'
     """
-    if success in ('success',True):
-        header = 'Success'
-        icon = 'success'
-    elif success == 'warning':
-        header = 'Warning'
-        icon = 'warning'
-    elif success in (False, 'danger'):
-        header = 'Failure'
-        icon = 'danger'
-    elif success == 'info':
-        header = 'Info'
-        icon = 'info'
+    if success in ("success", True):
+        header = "Success"
+        icon = "success"
+    elif success == "warning":
+        header = "Warning"
+        icon = "warning"
+    elif success in (False, "danger"):
+        header = "Failure"
+        icon = "danger"
+    elif success == "info":
+        header = "Info"
+        icon = "info"
     else:
-        header = 'Warning',
-        icon = 'warning'
+        header = ("Warning",)
+        icon = "warning"
     return dbc.Toast(
         chil,
         header=header,
         is_open=True,
         icon=icon,
         duration=4000,
-        style={"position": "fixed", "top": "8%", "right": "1%", "width": "25%", "z":5000},
+        style={
+            "position": "fixed",
+            "top": "8%",
+            "right": "1%",
+            "width": "25%",
+            "z": 5000,
+        },
     )
 
 
@@ -177,56 +192,56 @@ def execute_change_operations(ops: list, change_name: str):
     
     Returns a utils.toast() (dbc.Toast wrapper) with feedback info.
     """
-    bad = ['',None]
+    bad = ["", None]
 
     for op in ops:
-        if op['new_value']:
-            op['new_value'] = op['new_value'].strip()
-        
+        if op["new_value"]:
+            op["new_value"] = op["new_value"].strip()
+
         # CHECK BLANK IF REQUIRED
-        if op['required']:
-            if op['new_value'] in bad:
-                return toast(f'{op["name"]} cannot be blank.','danger')
+        if op["required"]:
+            if op["new_value"] in bad:
+                return toast(f'{op["name"]} cannot be blank.', "danger")
 
     # CHECK ALL VALUES ARE SAME
-    if all([op['new_value'] == op['old_value'] for op in ops]):
-        return toast('Values are the same.','warning')
+    if all([op["new_value"] == op["old_value"] for op in ops]):
+        return toast("Values are the same.", "warning")
 
     # DO THE CHANGES IF THE VALUES ARE DIFFERENT
     rollbacks = False
     for op in ops:
-        if not op['new_value'] == op['old_value']:        
+        if not op["new_value"] == op["old_value"]:
             # VALIDATE THE NEW VALUE
             # if invalid, we'll rollback all and stop all
             try:
-                if not op['validate'](op['new_value']):
-                    rollbacks = op['name']
+                if not op["validate"](op["new_value"]):
+                    rollbacks = op["name"]
                     break
             except:
-                rollbacks = op['name']
+                rollbacks = op["name"]
                 break
-                
-            op['done'] = op['function'](op['ID'], op['new_value'])
 
-    # IF ALL GOOD, SEND IT        
-    if not rollbacks and all([op['done'] for op in ops]):
-        return toast(f'Successfully changed {change_name}','success')
-    
+            op["done"] = op["function"](op["ID"], op["new_value"])
+
+    # IF ALL GOOD, SEND IT
+    if not rollbacks and all([op["done"] for op in ops]):
+        return toast(f"Successfully changed {change_name}", "success")
+
     # ELSE, ROLLBACK
     else:
         for op in ops:
             # USE ROLLBACK FUNCTION IF SPECIFIED
-            if 'rollback_function' in op:
-                op['rollback_function'](op['ID'], op['new_value'])
+            if "rollback_function" in op:
+                op["rollback_function"](op["ID"], op["new_value"])
             else:
-                op['function'](op['ID'], op['old_value'])
-        
+                op["function"](op["ID"], op["old_value"])
+
         # INVALID VALUE MESSAGE
         if rollbacks:
-            return toast(f'{rollbacks} is not valid.','danger')
+            return toast(f"{rollbacks} is not valid.", "danger")
 
         # ROLLBACK MESSAGE
-        return toast(f'Unable to change {change_name}. Rolled back.','failure')
+        return toast(f"Unable to change {change_name}. Rolled back.", "failure")
 
 
 #########################################################################
@@ -285,35 +300,35 @@ def execute_update_operations(ops: list, change_name: str):
     
     Returns a utils.toast() (dbc.Toast wrapper) with feedback info.
     """
-    for op in ops:        
+    for op in ops:
         # CHECK BLANK IF REQUIRED
-        if op['required']:
-            if op['new_value'] == []:
-                return toast(f'{op["name"]} cannot be blank.','danger')
+        if op["required"]:
+            if op["new_value"] == []:
+                return toast(f'{op["name"]} cannot be blank.', "danger")
 
     # DO THE CHANGES (DOES NOTHING IF THE LIST OF ADDS/REMOVES IS EMPTY)
     rollbacks = False
     for op in ops:
         # VALIDATE THE NEW VALUE
         # if invalidm stop the whole thing and rollback everything
-        if not all([ op['validate'](val) for val in op['new_value']]):
-            rollbacks = op['name']
+        if not all([op["validate"](val) for val in op["new_value"]]):
+            rollbacks = op["name"]
             break
-        op['done'] = op['function'](op['ID'], op['new_value'])
+        op["done"] = op["function"](op["ID"], op["new_value"])
 
     # IF ALL GOOD, SEND IT
-    if not rollbacks and all([op['done'] for op in ops]):
-        return toast(f'Success: {change_name}','success')
-    
+    if not rollbacks and all([op["done"] for op in ops]):
+        return toast(f"Success: {change_name}", "success")
+
     # ELSE, ROLLBACK
     else:
         for op in ops:
             # USE ROLLBACK FUNCTION IF SPECIFIED
-            op['rollback_function'](op['ID'], op['new_value'])
-        
+            op["rollback_function"](op["ID"], op["new_value"])
+
         # INVALID VALUE MESSAGE (IF THAT'S WHY IT STOPPED)
         if rollbacks:
-            return toast(f'{rollbacks} value is not valid.','danger')
+            return toast(f"{rollbacks} value is not valid.", "danger")
 
         # FAILURE ROLLBACK MESSAGE (UNKNOWN FAILURE?)
-        return toast(f'Unsuccessful: {change_name}. Rolled back.','failure')
+        return toast(f"Unsuccessful: {change_name}. Rolled back.", "failure")
