@@ -14,6 +14,9 @@ from dash_access.clients.base import BaseAccessStore
 #################################################################################
 @dataclass
 class Args:
+    """
+    simpler input arguments to all relationship functions
+    """
     principal: str=None
     principal_type: str=None
     granted: str=None
