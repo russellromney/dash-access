@@ -2,12 +2,16 @@ import datetime
 
 # internal
 from dash_access.clients.base import BaseAccessStore
-from dash_access.access.relationship_objects import Grant as grant, Principal as principal
+from dash_access.access.relationship import Args, create, delete, delete_all, exists, get_all, copy
 
 def duplicate(store: BaseAccessStore, name: str, new_name: str) -> bool:
     # duplicate the relationships
-    principal.group(name).copy.group(store, new_name)
-
+    copy(
+        from_principal=name,
+        from_principal_type="group",
+        to_principal=new_name,
+        to_principal_type="group"
+    )
     return True
 
 def add(
@@ -26,8 +30,9 @@ def add(
 
     # DEFINE THE GROUP-USER RELATIONSHIPS
     for x in users:
-        if not grant.group(name).to.user(x).exists(store):
-            grant.group(name).to.user(x).create(store)
+        args = Args(x,"user",name,"group")
+        if not exists(store, args):
+            create(store, args)
 
     # DEFINE THE GROUP-GROUP INHERITS RELATIONSHIPS
     add_inherits(store, name, inherits=inherits)
@@ -36,21 +41,23 @@ def add(
 
 def add_inherits(store: BaseAccessStore, name: str, inherits: list = []) -> bool:
     for gname in inherits:
-        if not grant.group(gname).to.group(name):
-            grant.group(gname).to.group(name).create(store)
+        args = Args(name,"group",gname,"group")
+        if not exists(store,args):
+            create(store, args)
     return True
 
 
 def remove_inherits(store: BaseAccessStore, name: str, remove: list = []) -> bool:
     for gname in remove:
-        grant.group(gname).to.group(name).delete(store)
+        delete(store, Args(name,"group",gname,"group"))
     return True
 
 
 def add_permissions(store: BaseAccessStore, name: str, permissions: list = []) -> bool:
     for x in permissions:
-        if not grant.permission(x).to.group(name).exists(store):
-            grant.permission(x).to.group(name).create(store)
+        args = Args(name,"group",x,"permission")
+        if not exists(store,args):
+            create(store, args)
     return True
 
 
@@ -58,20 +65,21 @@ def remove_permissions(
     store: BaseAccessStore, name: str, permissions: list = []
 ) -> bool:
     for x in permissions:
-        grant.permission(x).to.group(name).delete(store)
+        delete(store,Args(name,"group",x,"permission"))
     return True
 
 
 def add_users(store: BaseAccessStore, name: str, users: list = []) -> bool:
     for x in users:
-        if not grant.group(name).to.user(x).exists(store):
-            grant.group(name).to.user(x)
+        args = Args(x,"user",name,"group")
+        if not exists(store,args):
+            create(store,args)
     return True
 
 
 def remove_users(store: BaseAccessStore, name: str, users: list = []) -> bool:
     for x in users:
-        grant.group(name).to.user(x).delete(store)
+        delete(store,Args(x,"user",name,"group"))
     return True
 
 
@@ -81,7 +89,7 @@ def inherits(store: BaseAccessStore, name: str, already: list = []) -> list:
     stop an infinite inheritance loop by passing in <already> - a list of groups the function has already seen
     returns None if name does not exist
     """
-    this_inherits = grant.group(name).get.groups(store)
+    this_inherits = inherits(store,name)
     new_inherits = []
     for gname in this_inherits:
         if gname in already:
@@ -106,12 +114,12 @@ def permissions(store: BaseAccessStore, name: str) -> list:
     first, get all the groups that it can access
     then, get the list of permissions those granted collectively to those groups
     """
-    this_group_permissions = principal.group(name).get.permissions(store)
+    this_group_permissions = get_all(store,Args(name,"group",granted_type="permission"))
 
     groups = inherits(store, name)
     permissions = []
     for gname in groups:
-        gpermissions = principal.group(gname).get.permissions(store)
+        gpermissions = get_all(store,Args(gname,"group",granted_type="permission"))
         permissions.extend(gpermissions)
     permissions = list(set([*permissions, *this_group_permissions]))
     return permissions

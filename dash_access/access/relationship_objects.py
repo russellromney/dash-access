@@ -206,7 +206,7 @@ class GrantedGet(object):
     """
 
     def __init__(self, granted: str, granted_type: str):
-        _checks(granted=granted, granted_type=principal_type)
+        _checks(granted=granted, granted_type=granted_type)
         self.granted = granted
         self.granted_type = granted_type
 
@@ -243,7 +243,7 @@ class GrantedDelete(object):
     """
 
     def __init__(self, granted: str, granted_type: str):
-        _checks(granted=principal, granted_type=granted_type)
+        _checks(granted=granted, granted_type=granted_type)
         self.granted = granted
         self.granted_type = granted_type
 

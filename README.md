@@ -113,25 +113,20 @@ the component is returned as planned; otherwise, the `alt` option is returned. `
 dash-access internals are exposed through `dash_access.access`. Each function gets passed an access database and some parameters to create some access control operation. The following is not an exhaustive list:
 
 ```python
-The relationship API is how you access direct relationships. There is a basic API and an object-oriented approach.
+The relationship API is how you access direct relationships.
+```
 
 ```python
 import dash_access as da
 store = da.Sqlite3AccessStore("local.sqlite3")
 
 # basic API
-da.relationship.create(store,principal="me",principal_type="user",granted="powers",granted_type="permission")
-da.relationship.exists(store,principal="me",principal_type="user",granted="powers",granted_type="permission")
-da.relationship.delete(store,principal="me",principal_type="user",granted="powers",granted_type="permission")
-da.relationship.copy(store,from_principal="me",from_principal_type="user",to_principal="them",to_principal_type="user")
-da.relationship.get_all(store,principal="me",principal_type="user",granted_type="group")
-
-# object-oriented API
-da.grant.permission("powers").to.user("me").create(store)
-db.grant.permission("powers").to.user("me").exists(store)
-db.grant.permission("powers").to.user("me").delete(store)
-db.principal.user("me").get.groups(store)
-
+from dash_access import relationship as rship
+rship.create(store, rship.Args(principal="me",principal_type="user",granted="powers",granted_type="permission"))
+rship.exists(store,rship.Args("me","user","powers","permission"))
+rship.delete(store,rship.Args("me","user","powers","permission"))
+rship.copy(store,from_principal="me",from_principal_type="user",to_principal="them",to_principal_type"user")
+rship.get_all(store,rship.Args("me","user",granted_type="group"))
 ```
 
 # DB Clients

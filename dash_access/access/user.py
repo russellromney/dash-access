@@ -3,42 +3,51 @@ import datetime
 # internal
 from dash_access.auth import generate_password_hash
 from dash_access.access import group
-from dash_access.access.relationship_objects import Grant, Principal
+from dash_access.access.relationship import Args, create, exists, delete, delete_all, get, get_all
 from dash_access.clients.base import BaseAccessStore
 
 
 def add_groups(store: BaseAccessStore, user_id: str, groups: list) -> bool:
     """create user-group relationship(s)"""
     for x in groups:
-        if not Grant.group(x).to.user(user_id).exists(store):
-            Grant.group(x).to.user(user_id).create(store)
+        args = Args(user_id,"user",x,"group")
+        if not exists(store, args):
+            create(store, args)
     return True
 
 
 def remove_groups(store: BaseAccessStore, user_id: str, groups: list) -> bool:
     """remove all user-group relationship(s)"""
     for x in groups:
-        Grant.group(x).to.user(user_id).create(store)
+        args = Args(user_id,"user",x,"group")
+        delete(store, args)
     return True
 
 
 def add_permissions(store: BaseAccessStore, user_id: str, permissions: list) -> bool:
     """create user-permission relationship(s)"""
     for x in permissions:
-        Grant.permission(x).to.user(user_id).create(store)
+        args = Args(user_id,"user",x,"permission")
+        create(store, args)
     return True
 
 
 def remove_permissions(store: BaseAccessStore, user_id: str, permissions: list) -> bool:
     """remove user-permission relationship"""
     for x in permissions:
-        Grant.permission(x).to.user(user_id).create(store)
+        args = Args(user_id,"user",x,"permission")
+        delete(store, args)
     return True
 
 
 def groups(store: BaseAccessStore, user_id: str) -> list:
     """get all the user-group relationships"""
-    this_user_groups = Principal.user(user_id).groups(store)
+    args = Args(
+        principal=user_id,
+        principal_type="user",
+        granted_type="group"
+    )
+    this_user_groups = get_all(store, args)
 
     # recursively follow each group's inheritance trail
     # add each group's trail to the user's list of groups
@@ -59,12 +68,12 @@ def permissions(store: BaseAccessStore, user_id: str) -> list:
     then, combine the user's direct permissions with each group's granted permissions
     return that combined list
     """
-    user_permissions = Principal.user(user_id).get.permissions(store)
-    user_groups = Principal.user(user_id).get.groups(store)
+    user_permissions = get_all(store, Args(user_id,"user",granted_type="permission"))
+    user_groups = get_all(store, Args(user_id,"user",granted_type="group"))
 
     group_permissions = []
     for gname in user_groups:
-        this_group_permissions = Principal.group(gname).get.permissions(store)
+        this_group_permissions = get_all(store, Args(gname,"group",granted_type="permission"))
         group_permissions.extend(this_group_permissions)
     all_user_permissions = list(set([*user_permissions, *group_permissions]))
     return all_user_permissions
@@ -130,7 +139,7 @@ def has_access(
 
 class AccessUserMixin(object):
     """
-    Simple class-based API to the dash_access class.
+    Simple class-based API to the dash_access.
     
     Add it as an attribute of the flask_login.current_user user model 
     to simplify checking access control for a given user.

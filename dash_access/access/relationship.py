@@ -11,6 +11,13 @@ from dash_access.clients.base import BaseAccessStore
 #################################################################################
 ### OPERATIONAL FUNCTIONALITY
 #################################################################################
+class Args:
+    principal: str=None
+    principal_type: str=None
+    granted: str=None
+    granted_type: str=None
+
+
 def _type_check(value, value_type, name):
     """
     shortcut to type check with helpful ValueError
@@ -29,10 +36,7 @@ def _value_check(value, okay: list, name):
 
 def create(
     store: BaseAccessStore,
-    principal: str,
-    principal_type: str,
-    granted: str,
-    granted_type: str,
+    args: Args,
 ) -> bool:
     """
     creates a relationship between the principal and the granted
@@ -40,24 +44,21 @@ def create(
     """
     # print(f'creating relationship {principal_type} {principal} to {granted_type} {granted}')
     return store.set(
-        key="-".join([principal, principal_type, granted, granted_type]),
+        key="-".join([args.principal, args.principal_type, args.granted, args.granted_type]),
         table="relationships",
         val={
-            "id": "-".join([principal, principal_type, granted, granted_type]),
-            "principal": principal,
-            "principal_type": principal_type,
-            "granted": granted,
-            "granted_type": granted_type,
+            "id": "-".join([args.principal, args.principal_type, args.granted, args.granted_type]),
+            "principal": args.principal,
+            "principal_type": args.principal_type,
+            "granted": args.granted,
+            "granted_type": args.granted_type,
             "ts": datetime.datetime.now().isoformat(),
         },
     )
 
 def exists(
     store: BaseAccessStore,
-    principal: str,
-    principal_type: str,
-    granted: str,
-    granted_type: str,
+    args: Args,
 ) -> bool:
     """
     checks if relationship exists between the principal and the granted
@@ -66,7 +67,7 @@ def exists(
     if the combo id key exists, the relationship exists
     """
     res = store.get(
-        key="-".join([principal, principal_type, granted, granted_type]),
+        key="-".join([args.principal, args.principal_type, args.args.granted, args.granted_type]),
         table="relationships",
     ) not in (None, [])
     return res
@@ -74,10 +75,7 @@ def exists(
 
 def get_all(
     store: BaseAccessStore,
-    principal: str = None,
-    principal_type: str = None,
-    granted: str = None,
-    granted_type: str = None,
+    args: Args,
 ):
     """
     get all relationships where the given constraints are met
@@ -85,18 +83,18 @@ def get_all(
     """
     # INPUT VALIDATION AND CONSTRUCT WHERE
     where = []
-    if principal:
-        _type_check(principal, str, "principal")
-        where.append({"col": "principal", "val": principal})
-    if principal_type:
-        _type_check(principal_type, str, "principal_type")
-        where.append({"col": "principal_type", "val": principal_type})
-    if granted:
-        _type_check(granted, str, "granted")
-        where.append({"col": "granted", "val": granted})
-    if granted_type:
-        _type_check(granted_type, str, "granted_type")
-        where.append({"col": "granted_type", "val": granted_type})
+    if args.principal:
+        _type_check(args.principal, str, "principal")
+        where.append({"col": "principal", "val": args.principal})
+    if args.principal_type:
+        _type_check(args.principal_type, str, "principal_type")
+        where.append({"col": "principal_type", "val": args.principal_type})
+    if args.granted:
+        _type_check(args.granted, str, "granted")
+        where.append({"col": "granted", "val": args.granted})
+    if args.granted_type:
+        _type_check(args.granted_type, str, "granted_type")
+        where.append({"col": "granted_type", "val": args.granted_type})
 
     val = store.get_all(table="relationships", where=where)
     return [x["granted"] for x in val]
@@ -104,10 +102,7 @@ def get_all(
 
 def delete(
     store: BaseAccessStore,
-    principal: str,
-    principal_type: str,
-    granted: str,
-    granted_type: str,
+    args: Args
 ) -> bool:
     """
     deletes a relationship between the principal and the granted
@@ -116,17 +111,14 @@ def delete(
     permissive - only deletes if it exists
     """
     return store.delete(
-        key="-".join([principal, principal_type, granted, granted_type]),
+        key="-".join([args.principal, args.principal_type, args.granteded, args.granted_type]),
         table="relationships",
     )
 
 
 def delete_all(
     store: BaseAccessStore,
-    principal: str = None,
-    principal_type: str = None,
-    granted: str = None,
-    granted_type: str = None,
+    args: Args
 ) -> int:
     """
     deletes all relationships for all relationships with EITHER the given:
@@ -135,8 +127,9 @@ def delete_all(
     NOT BOTH!
     """
     # checking inputs
-    principals = principal and principal_type
-    granteds = granted and granted_type
+    principals = args.principal and args.principal_type
+    granteds = args.granted and args.granted_type
+    where = None
     if principals:
         if granteds:
             raise ValueError(
@@ -147,26 +140,26 @@ def delete_all(
             raise ValueError(
                 "Only one pair of principal_type/principal or granted_type/granted is allowed"
             )
-    if not granted and not principals:
+    if not args.granted and not principals:
         raise ValueError(
             "Must have one pair of principal_type/principal or granted_type/granted"
         )
 
     if granteds:
-        _type_check(granted, str, "granted")
-        _type_check(granted_type, str, "granted_type")
-        _value_check(granted_type, ["group", "permission"], "granted_type")
+        _type_check(args.granted, str, "granted")
+        _type_check(args.granted_type, str, "granted_type")
+        _value_check(args.granted_type, ["group", "permission"], "granted_type")
         where = [
-            {"col": "granted", "val": granted},
-            {"col": "granted_type", "val": granted_type},
+            {"col": "granted", "val": args.granted},
+            {"col": "granted_type", "val": args.granted_type},
         ]
     if principals:
-        _type_check(principal, str, "principal")
-        _type_check(principal_type, str, "principal_type")
-        _value_check(principal_type, ["group", "user"], "principal_type")
+        _type_check(args.principal, str, "principal")
+        _type_check(args.principal_type, str, "principal_type")
+        _value_check(args.principal_type, ["group", "user"], "principal_type")
         where = [
-            {"col": "principal", "val": principal},
-            {"col": "principal_type", "val": principal_type},
+            {"col": "principal", "val": args.principal},
+            {"col": "principal_type", "val": args.principal_type},
         ]
 
     # get all the relevant relationships
@@ -211,32 +204,3 @@ def copy(
         )
 
     return True
-
-
-def helper_factory_copy(from_principal_type: str, to_principal_type: str):
-    """
-    returns a helper function to copy a relationship(s)
-    from a given principal with a certain type
-    to a given principal with a certain type
-    """
-
-    def func(store: BaseAccessStore, from_principal: str, to_principal: str) -> list:
-        f"""
-        helper to copy relationship between principals with type {from_principal_type}
-        and granted of type {to_principal_type}
-        """
-        return copy(
-            store=store,
-            from_principal=from_principal,
-            from_principal_type=from_principal_type,
-            to_principal=to_principal,
-            to_principal_type=to_principal_type,
-        )
-
-    return func
-
-
-user_user_copy = helper_factory_copy("user", "user")
-user_group_copy = helper_factory_copy("user", "group")
-group_user_copy = helper_factory_copy("group", "user")
-group_group_copy = helper_factory_copy("group", "group")
