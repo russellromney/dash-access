@@ -2,7 +2,7 @@ import datetime
 
 # internal
 from dash_access.clients.base import BaseAccessStore
-from dash_access.access.relationship_objects import Grant as grant
+from dash_access.access.relationship_objects import Grant as grant, Principal as principal
 
 
 def get(store: BaseAccessStore, name: str) -> dict:
@@ -78,7 +78,12 @@ def add(
 def delete(store: BaseAccessStore, name: str) -> bool:
     if exists(store, name):
         res_store = store.delete(name, table="groups")
-        relationship.delete_all(store, name, "group")
+        
+        # DELETE RELATIONSHIPS AS PRINCIPAL
+        principal.group(name).delete.all(store)
+        
+        # DELETE RELATIONSHIPS AS GRANTED
+        grant.group(name).delete(store)
         return res_store
     else:
         return True
@@ -110,7 +115,7 @@ def duplicate(store: BaseAccessStore, name: str, new_name: str) -> bool:
     add(store, new_name)
 
     # duplicate the relationships
-    relationship.group_group_copy(store, name, new_name)
+    principal.group(name).copy.group(store, new_name)
 
     return True
 
@@ -178,7 +183,7 @@ def inherits(store: BaseAccessStore, name: str, already: list = []) -> list:
     if record is None:
         return already
 
-    this_inherits = grant.group(name).groups(store)
+    this_inherits = grant.group(name).get.groups(store)
     new_inherits = []
     for gname in this_inherits:
         if gname in already:
@@ -206,12 +211,12 @@ def permissions(store: BaseAccessStore, name: str) -> list:
     record = get(store, name)
     if record is None:
         return []
-    this_group_permissions = relationship.Principal.group(name).permissions(store)
+    this_group_permissions = principal.group(name).get.permissions(store)
 
     groups = inherits(store, name)
     permissions = []
     for gname in groups:
-        gpermissions = relationship.Principal.group(gname).permissions(store)
+        gpermissions = principal.group(gname).get.permissions(store)
         permissions.extend(gpermissions)
     permissions = list(set([*permissions, *this_group_permissions]))
     return permissions

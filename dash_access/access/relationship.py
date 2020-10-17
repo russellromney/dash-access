@@ -1,6 +1,6 @@
 """
 A module that creates, edits, and reveals relationships between 
-users and groups.
+users, groups, and permissinos
 """
 
 import datetime
