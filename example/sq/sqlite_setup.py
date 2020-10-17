@@ -47,6 +47,10 @@ app.config.suppress_callback_exceptions = True
 
 server = app.server
 server.secret_key = 'my secret key'
+server.config.update(
+    SQLALCHEMY_TRACK_MODIFICATIONS=False,
+    SQLALCHEMY_DATABASE_URI="sqlite:///:memory:",
+)
 login_manager.init_app(server)
 db.init_app(server)
 

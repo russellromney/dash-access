@@ -3,7 +3,7 @@ import datetime
 # internal
 from dash_access.auth import generate_password_hash
 from dash_access.access import group
-from dash_access.access.relationship import Args, create, exists, delete, delete_all, get, get_all
+from dash_access.access.relationship import Args, create, exists, delete, get_all
 from dash_access.clients.base import BaseAccessStore
 
 

@@ -4,6 +4,7 @@ users, groups, and permissinos
 """
 
 import datetime
+from dataclasses import dataclass
 
 # internal
 from dash_access.clients.base import BaseAccessStore
@@ -11,6 +12,7 @@ from dash_access.clients.base import BaseAccessStore
 #################################################################################
 ### OPERATIONAL FUNCTIONALITY
 #################################################################################
+@dataclass
 class Args:
     principal: str=None
     principal_type: str=None
@@ -67,7 +69,7 @@ def exists(
     if the combo id key exists, the relationship exists
     """
     res = store.get(
-        key="-".join([args.principal, args.principal_type, args.args.granted, args.granted_type]),
+        key="-".join([args.principal, args.principal_type, args.granted, args.granted_type]),
         table="relationships",
     ) not in (None, [])
     return res
