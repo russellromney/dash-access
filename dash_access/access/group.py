@@ -4,40 +4,11 @@ import datetime
 from dash_access.clients.base import BaseAccessStore
 from dash_access.access.relationship_objects import Grant as grant, Principal as principal
 
+def duplicate(store: BaseAccessStore, name: str, new_name: str) -> bool:
+    # duplicate the relationships
+    principal.group(name).copy.group(store, new_name)
 
-def get(store: BaseAccessStore, name: str) -> dict:
-    """
-    pull a group's data from the store based on group name
-    
-    args:
-        name: str
-        store: the app's access store object
-    
-    returns:
-        dict of group values if group exists
-        else None
-    """
-    group = store.get(name, table="groups")
-    if group in ([], None):
-        return None
-    return group
-
-
-def get_all(store: BaseAccessStore) -> list:
-    return store.get_all("groups")
-
-
-def put(store: BaseAccessStore, name: str, record: dict) -> bool:
-    """
-    shortcut to setting a value in the store for groups
-    """
-    return store.set(key=name, table="groups", val=record)
-
-
-def exists(store: BaseAccessStore, name: str):
-    out = get(store, name) is not None
-    return out
-
+    return True
 
 def add(
     store: BaseAccessStore,
@@ -47,20 +18,9 @@ def add(
     users: list = [],
 ) -> bool:
     """
-    create a group in the store
-    creates relationships with groups - users and permissions (if not exist)
-
+    shortcut to add relationships and inherits for a given group
     returns bool of success
     """
-    # don't do it if the group already exists
-    if exists(store, name):
-        return False
-
-    # do it
-    record = {"id": name, "update_ts": datetime.datetime.now().isoformat()}
-    # CREATE THE GROUP
-    res = put(store, name, record)
-
     # DEFINE THE GROUP-PERMISSION RELATIONSHIPS
     add_permissions(store, name, permissions=permissions)
 
@@ -71,58 +31,10 @@ def add(
 
     # DEFINE THE GROUP-GROUP INHERITS RELATIONSHIPS
     add_inherits(store, name, inherits=inherits)
-
-    return res
-
-
-def delete(store: BaseAccessStore, name: str) -> bool:
-    if exists(store, name):
-        res_store = store.delete(name, table="groups")
-        
-        # DELETE RELATIONSHIPS AS PRINCIPAL
-        principal.group(name).delete.all(store)
-        
-        # DELETE RELATIONSHIPS AS GRANTED
-        grant.group(name).delete(store)
-        return res_store
-    else:
-        return True
-
-
-def change_name(store: BaseAccessStore, name: str, new_name: str) -> bool:
-    record = get(store, name)
-    if not record:
-        return False
-
-    if exists(store, new_name):
-        return False
-
-    record["name"] = new_name
-    put(store, name, record)
-    return True
-
-
-def duplicate(store: BaseAccessStore, name: str, new_name: str) -> bool:
-    # does the new one already exist?
-    if exists(store, new_name):
-        return False
-
-    # does the one to duplicate exist?
-    if not exists(store, name):
-        return None
-
-    # add the sucker
-    add(store, new_name)
-
-    # duplicate the relationships
-    principal.group(name).copy.group(store, new_name)
-
     return True
 
 
 def add_inherits(store: BaseAccessStore, name: str, inherits: list = []) -> bool:
-    if not exists(store, name):
-        return None
     for gname in inherits:
         if not grant.group(gname).to.group(name):
             grant.group(gname).to.group(name).create(store)
@@ -130,16 +42,12 @@ def add_inherits(store: BaseAccessStore, name: str, inherits: list = []) -> bool
 
 
 def remove_inherits(store: BaseAccessStore, name: str, remove: list = []) -> bool:
-    if not exists(store, name):
-        return None
     for gname in remove:
         grant.group(gname).to.group(name).delete(store)
     return True
 
 
 def add_permissions(store: BaseAccessStore, name: str, permissions: list = []) -> bool:
-    if not exists(store, name):
-        return None
     for x in permissions:
         if not grant.permission(x).to.group(name).exists(store):
             grant.permission(x).to.group(name).create(store)
@@ -149,16 +57,12 @@ def add_permissions(store: BaseAccessStore, name: str, permissions: list = []) -
 def remove_permissions(
     store: BaseAccessStore, name: str, permissions: list = []
 ) -> bool:
-    if not exists(store, name):
-        return None
     for x in permissions:
         grant.permission(x).to.group(name).delete(store)
     return True
 
 
 def add_users(store: BaseAccessStore, name: str, users: list = []) -> bool:
-    if not exists(store, name):
-        return None
     for x in users:
         if not grant.group(name).to.user(x).exists(store):
             grant.group(name).to.user(x)
@@ -166,8 +70,6 @@ def add_users(store: BaseAccessStore, name: str, users: list = []) -> bool:
 
 
 def remove_users(store: BaseAccessStore, name: str, users: list = []) -> bool:
-    if not exists(store, name):
-        return None
     for x in users:
         grant.group(name).to.user(x).delete(store)
     return True
@@ -179,10 +81,6 @@ def inherits(store: BaseAccessStore, name: str, already: list = []) -> list:
     stop an infinite inheritance loop by passing in <already> - a list of groups the function has already seen
     returns None if name does not exist
     """
-    record = get(store, name)
-    if record is None:
-        return already
-
     this_inherits = grant.group(name).get.groups(store)
     new_inherits = []
     for gname in this_inherits:
@@ -208,9 +106,6 @@ def permissions(store: BaseAccessStore, name: str) -> list:
     first, get all the groups that it can access
     then, get the list of permissions those granted collectively to those groups
     """
-    record = get(store, name)
-    if record is None:
-        return []
     this_group_permissions = principal.group(name).get.permissions(store)
 
     groups = inherits(store, name)

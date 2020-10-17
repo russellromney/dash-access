@@ -28,12 +28,6 @@ def tables():
                 where_val bytea
             );
         """,
-        "groups": """
-            create table if not exists groups (
-                id varchar (50),
-                update_ts varchar (50)
-            );
-        """,
         "relationships": """
             create table if not exists relationships (
                 id varchar (50) ,
@@ -124,7 +118,6 @@ class PostgresAccessStore(BaseAccessStore):
     def get_table(self, table):
         tables = {
             "users": os.environ.get("USERS_TABLE", "users"),
-            "groups": os.environ.get("GROUPS_TABLE", "groups"),
             "relationships": os.environ.get("RELATIONSHIPS_TABLE", "relationships"),
             "admin_events": os.environ.get("ADMIN_EVENTS_TABLE", "admin_events"),
             "access_events": os.environ.get(

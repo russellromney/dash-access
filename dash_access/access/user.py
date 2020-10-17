@@ -59,12 +59,12 @@ def permissions(store: BaseAccessStore, user_id: str) -> list:
     then, combine the user's direct permissions with each group's granted permissions
     return that combined list
     """
-    user_permissions = Principal.user(user_id).permissions(store)
-    user_groups = Principal.user(user_id).groups(store)
+    user_permissions = Principal.user(user_id).get.permissions(store)
+    user_groups = Principal.user(user_id).get.groups(store)
 
     group_permissions = []
     for gname in user_groups:
-        this_group_permissions = Principal.group(gname).permissions(store)
+        this_group_permissions = Principal.group(gname).get.permissions(store)
         group_permissions.extend(this_group_permissions)
     all_user_permissions = list(set([*user_permissions, *group_permissions]))
     return all_user_permissions

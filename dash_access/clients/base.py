@@ -69,9 +69,7 @@ class BaseAccessStore(object):
         table; idea is to fill all the values in with a default
         if not in the return value from the store
         """
-        if table == "groups":
-            return {k: None for k in ["id", "update_ts"]}
-        elif table == "relationships":
+        if table == "relationships":
             return {
                 k: None
                 for k in [

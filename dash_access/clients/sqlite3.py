@@ -28,13 +28,7 @@ def tables():
             vals blob,
             where_val blob
     )""",
-        "groups": """
-        create table if not exists groups (
-            id text primary key,
-            update_ts text
-        )
-    """,
-        "relationships": """
+    "relationships": """
         create table if not exists relationships (
             id text,
             principal text,
@@ -157,7 +151,6 @@ class Sqlite3AccessStore(BaseAccessStore):
     def get_table(self, table):
         tables = {
             "users": os.environ.get("USERS_TABLE", "users"),
-            "groups": os.environ.get("GROUPS_TABLE", "groups"),
             "relationships": os.environ.get("RELATIONSHIPS_TABLE", "relationships"),
             "admin_events": os.environ.get("ADMIN_EVENTS_TABLE", "admin_events"),
             "access_events": os.environ.get(

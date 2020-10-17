@@ -8,12 +8,6 @@ from pynamodb.connection import Connection
 
 from clients.base import BaseAccessStore
 
-class Groups(Model):
-    class Meta:
-        table_name = ""
-    id = UnicodeAttribute(range_key=True)
-    update_ts = UnicodeAttribute()
-
 class Relationships(Model):
     class Meta: 
         table_name = ""
@@ -48,13 +42,11 @@ class DynamoAccessStore(BaseAccessStore):
         relationships="relationships", 
         access_events="access_events",
         admin_events="admin_events",
-        groups="groups",
     ):
         self.c = boto3.client("dynamodb")
         self.relationships_table = self.c.Table(relationships)
         self.access_events_table = access_events
         self.admin_events_table = admin_events
-        self.groups_table = groups
 
     def get_table(self, table: str):
         if table == "relationships":
@@ -63,8 +55,6 @@ class DynamoAccessStore(BaseAccessStore):
             return self.admin_events_table
         if table == "access_events":
             return self.access_events_table
-        if table == "groups":
-            return self.groups_table
         # TABLE DOESN'T EXIST
         else:
             raise ValueError(f"KeyValStore: table {table} is not available. ")
@@ -205,8 +195,6 @@ class DynamoStore(BaseAccessStore):
         """
         resource = boto3.resource("dynamodb")
         self.users = resource.Table(os.environ["USERS_TABLE"])
-        self.groups = resource.Table(os.environ["GROUPS_TABLE"])
-
     def _encode(self, val):
         """
         Handles all type changes to the data store
@@ -251,9 +239,6 @@ class DynamoStore(BaseAccessStore):
         """select the right table"""
         if table == "users":
             return self.users
-        elif table == "groups":
-            return self.groups
-
         # TABLE DOESN'T EXIST
         else:
             raise ValueError(f"KeyValStore: table {table} is not available. ")
