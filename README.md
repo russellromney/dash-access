@@ -223,7 +223,7 @@ Finally, create the access-controlled app that uses the previously-created datab
 ```python
 # app.py
 import dash
-import dash_html_components as html
+from dash import html
 from dash_access import Controlled
 from server import app
 

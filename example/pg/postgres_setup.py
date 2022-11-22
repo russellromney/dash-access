@@ -1,29 +1,42 @@
 # external imports
 import dash
 import dash_bootstrap_components as dbc
-from dash_access import generate_password_hash, check_password_hash, AccessUserMixin, PostgresAccessStore
+from dash_access import (
+    generate_password_hash,
+    check_password_hash,
+    AccessUserMixin,
+    PostgresAccessStore,
+)
 from dash_access.access import group
 
 from flask_login import UserMixin, LoginManager
 from flask_sqlalchemy import SQLAlchemy
 import psycopg2
 
-app = dash.Dash(__name__,external_stylesheets=[dbc.themes.BOOTSTRAP],prevent_initial_callbacks=True)
+app = dash.Dash(
+    __name__,
+    external_stylesheets=[dbc.themes.BOOTSTRAP],
+    prevent_initial_callbacks=True,
+)
 app.config.suppress_callback_exceptions = True
 
 server = app.server
-server.secret_key = 'my secret key'
+server.secret_key = "my secret key"
 POSTGRES_USER = "postgres"
 POSTGRES_PW = ""
 POSTGRES_URL = "localhost"
 POSTGRES_DB = "somedb"
-POSTGRES_URI = f"postgresql+psycopg2://{POSTGRES_USER}:{POSTGRES_PW}@{POSTGRES_URL}/{POSTGRES_DB}"
-server.config['SQLALCHEMY_DATABASE_URI'] = POSTGRES_URI
-server.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False # silence the deprecation warning
+POSTGRES_URI = (
+    f"postgresql+psycopg2://{POSTGRES_USER}:{POSTGRES_PW}@{POSTGRES_URL}/{POSTGRES_DB}"
+)
+server.config["SQLALCHEMY_DATABASE_URI"] = POSTGRES_URI
+server.config[
+    "SQLALCHEMY_TRACK_MODIFICATIONS"
+] = False  # silence the deprecation warning
 
 login_manager = LoginManager(server)
 db = SQLAlchemy(server)
-accessdb = psycopg2.connect(user=POSTGRES_USER,database=POSTGRES_DB)
+accessdb = psycopg2.connect(user=POSTGRES_USER, database=POSTGRES_DB)
 
 
 ################################################################################

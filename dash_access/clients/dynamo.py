@@ -8,9 +8,11 @@ from pynamodb.connection import Connection
 
 from clients.base import BaseAccessStore
 
+
 class Relationships(Model):
-    class Meta: 
+    class Meta:
         table_name = ""
+
     id = UnicodeAttribute(hash_key=True)
     ts = UnicodeAttribute()
     principal = UnicodeAttribute()
@@ -18,28 +20,32 @@ class Relationships(Model):
     granted = UnicodeAttribute()
     granted_type = UnicodeAttribute()
 
+
 class AccessEvents(Model):
     class Meta:
         table_name = ""
+
     user_id = UnicodeAttribute(hash_key=True)
     ts = UnicodeAttribute(range_key=True)
     permission = UnicodeAttribute()
     status = BooleanAttribute()
 
+
 class AdminEvents(Model):
     class Meta:
         table_name = ""
+
     ts = UnicodeAttribute(hash_key=True)
     table_name = UnicodeAttribute()
     operation = UnicodeAttribute()
     vals = BinaryAttribute()
     where_val = BinaryAttribute()
-    
+
 
 class DynamoAccessStore(BaseAccessStore):
     def __init__(
-        self, 
-        relationships="relationships", 
+        self,
+        relationships="relationships",
         access_events="access_events",
         admin_events="admin_events",
     ):
@@ -85,17 +91,17 @@ class DynamoAccessStore(BaseAccessStore):
         """
         key:
             str, int, float
-            
+
         note on types:
             if value was a dictionary, it transforms back to dictionary and loads
             if value was a int, float, just returns the original value
 
-        returns:            
+        returns:
             The value for the key in the store
             None if key does not exist
 
-        NOTE this simplifies everything by returning the entire record 
-            every time. Otherwise we'd have to do some custom logic. 
+        NOTE this simplifies everything by returning the entire record
+            every time. Otherwise we'd have to do some custom logic.
             It's easier to expect a full record and handle errors later.
         NOTE we fill in the blanks for fields that are missing; no errors here!
         """
@@ -163,7 +169,7 @@ class DynamoAccessStore(BaseAccessStore):
         insert values into a logging table
         table name must exist (duh)
         kwargs is column names mapped to values
-        
+
         returns indicator of success
         """
         out = {key: self.encode(value) for key, value in kwargs.items()}
@@ -195,6 +201,7 @@ class DynamoStore(BaseAccessStore):
         """
         resource = boto3.resource("dynamodb")
         self.users = resource.Table(os.environ["USERS_TABLE"])
+
     def _encode(self, val):
         """
         Handles all type changes to the data store
@@ -202,7 +209,7 @@ class DynamoStore(BaseAccessStore):
         encodes the object if it's not a simple type, using its encode
             simple: int/str/bytes
             not simple: dict/list/tuple/float
-        
+
         if it's a float it returns a decimal.Decimal object
         otherwise just returns the value
         """
@@ -219,7 +226,7 @@ class DynamoStore(BaseAccessStore):
         Handles all type changes from the data store
 
         if the value has type boto3.dynamodb.types.Binary, it was encoded before sending;
-        grab the instance's value and decode it with the _encoder        
+        grab the instance's value and decode it with the _encoder
 
         otherwise just returns the value
         """
@@ -271,17 +278,17 @@ class DynamoStore(BaseAccessStore):
         """
         key:
             str, int, float
-            
+
         note on types:
             if value was a dictionary, it transforms back to dictionary and loads
             if value was a int, float, just returns the original value
 
-        returns:            
+        returns:
             The value for the key in the store
             None if key does not exist
 
-        NOTE this simplifies everything by returning the entire record 
-            every time. Otherwise we'd have to do some custom logic. 
+        NOTE this simplifies everything by returning the entire record
+            every time. Otherwise we'd have to do some custom logic.
             It's easier to expect a full record and handle errors later.
         NOTE we fill in the blanks for fields that are missing; no errors here!
         """
@@ -381,7 +388,7 @@ class DynamoLoggerStore(BaseAccessStore):
         insert values into a logging table
         table name must exist (duh)
         kwargs is column names mapped to values
-        
+
         returns indicator of success
         """
         out = {key: self.encode(value) for key, value in kwargs.items()}

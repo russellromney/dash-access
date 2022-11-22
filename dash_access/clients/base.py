@@ -65,7 +65,7 @@ class BaseAccessStore(object):
 
     def table_fields(self, table: str) -> dict:
         """
-        a list of all the fields that should be in the 
+        a list of all the fields that should be in the
         table; idea is to fill all the values in with a default
         if not in the return value from the store
         """

@@ -5,6 +5,7 @@ users, groups, and permissinos
 
 import datetime
 from dataclasses import dataclass
+from typing import List
 
 # internal
 from dash_access.clients.base import BaseAccessStore
@@ -17,10 +18,11 @@ class Args:
     """
     simpler input arguments to all relationship functions
     """
-    principal: str=None
-    principal_type: str=None
-    granted: str=None
-    granted_type: str=None
+
+    principal: str = None
+    principal_type: str = None
+    granted: str = None
+    granted_type: str = None
 
 
 def _type_check(value, value_type, name):
@@ -49,10 +51,14 @@ def create(
     """
     # print(f'creating relationship {principal_type} {principal} to {granted_type} {granted}')
     return store.set(
-        key="-".join([args.principal, args.principal_type, args.granted, args.granted_type]),
+        key="-".join(
+            [args.principal, args.principal_type, args.granted, args.granted_type]
+        ),
         table="relationships",
         val={
-            "id": "-".join([args.principal, args.principal_type, args.granted, args.granted_type]),
+            "id": "-".join(
+                [args.principal, args.principal_type, args.granted, args.granted_type]
+            ),
             "principal": args.principal,
             "principal_type": args.principal_type,
             "granted": args.granted,
@@ -60,6 +66,7 @@ def create(
             "ts": datetime.datetime.now().isoformat(),
         },
     )
+
 
 def exists(
     store: BaseAccessStore,
@@ -72,7 +79,9 @@ def exists(
     if the combo id key exists, the relationship exists
     """
     res = store.get(
-        key="-".join([args.principal, args.principal_type, args.granted, args.granted_type]),
+        key="-".join(
+            [args.principal, args.principal_type, args.granted, args.granted_type]
+        ),
         table="relationships",
     ) not in (None, [])
     return res
@@ -81,7 +90,7 @@ def exists(
 def get_all(
     store: BaseAccessStore,
     args: Args,
-):
+) -> List[str]:
     """
     get all relationships where the given constraints are met
     if no constraints are provided, returns all relationships
@@ -105,10 +114,7 @@ def get_all(
     return [x["granted"] for x in val]
 
 
-def delete(
-    store: BaseAccessStore,
-    args: Args
-) -> bool:
+def delete(store: BaseAccessStore, args: Args) -> bool:
     """
     deletes a relationship between the principal and the granted
     for the given principal and granted types
@@ -116,15 +122,14 @@ def delete(
     permissive - only deletes if it exists
     """
     return store.delete(
-        key="-".join([args.principal, args.principal_type, args.granteded, args.granted_type]),
+        key="-".join(
+            [args.principal, args.principal_type, args.granteded, args.granted_type]
+        ),
         table="relationships",
     )
 
 
-def delete_all(
-    store: BaseAccessStore,
-    args: Args
-) -> int:
+def delete_all(store: BaseAccessStore, args: Args) -> int:
     """
     deletes all relationships for all relationships with EITHER the given:
         - principal_type and principal

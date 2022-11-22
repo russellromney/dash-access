@@ -2,7 +2,16 @@ import datetime
 
 # internal
 from dash_access.clients.base import BaseAccessStore
-from dash_access.access.relationship import Args, create, delete, delete_all, exists, get_all, copy
+from dash_access.access.relationship import (
+    Args,
+    create,
+    delete,
+    delete_all,
+    exists,
+    get_all,
+    copy,
+)
+
 
 def duplicate(store: BaseAccessStore, name: str, new_name: str) -> bool:
     # duplicate the relationships
@@ -10,9 +19,10 @@ def duplicate(store: BaseAccessStore, name: str, new_name: str) -> bool:
         from_principal=name,
         from_principal_type="group",
         to_principal=new_name,
-        to_principal_type="group"
+        to_principal_type="group",
     )
     return True
+
 
 def add(
     store: BaseAccessStore,
@@ -30,7 +40,7 @@ def add(
 
     # DEFINE THE GROUP-USER RELATIONSHIPS
     for x in users:
-        args = Args(x,"user",name,"group")
+        args = Args(x, "user", name, "group")
         if not exists(store, args):
             create(store, args)
 
@@ -41,22 +51,22 @@ def add(
 
 def add_inherits(store: BaseAccessStore, name: str, inherits: list = []) -> bool:
     for gname in inherits:
-        args = Args(name,"group",gname,"group")
-        if not exists(store,args):
+        args = Args(name, "group", gname, "group")
+        if not exists(store, args):
             create(store, args)
     return True
 
 
 def remove_inherits(store: BaseAccessStore, name: str, remove: list = []) -> bool:
     for gname in remove:
-        delete(store, Args(name,"group",gname,"group"))
+        delete(store, Args(name, "group", gname, "group"))
     return True
 
 
 def add_permissions(store: BaseAccessStore, name: str, permissions: list = []) -> bool:
     for x in permissions:
-        args = Args(name,"group",x,"permission")
-        if not exists(store,args):
+        args = Args(name, "group", x, "permission")
+        if not exists(store, args):
             create(store, args)
     return True
 
@@ -65,21 +75,21 @@ def remove_permissions(
     store: BaseAccessStore, name: str, permissions: list = []
 ) -> bool:
     for x in permissions:
-        delete(store,Args(name,"group",x,"permission"))
+        delete(store, Args(name, "group", x, "permission"))
     return True
 
 
 def add_users(store: BaseAccessStore, name: str, users: list = []) -> bool:
     for x in users:
-        args = Args(x,"user",name,"group")
-        if not exists(store,args):
-            create(store,args)
+        args = Args(x, "user", name, "group")
+        if not exists(store, args):
+            create(store, args)
     return True
 
 
 def remove_users(store: BaseAccessStore, name: str, users: list = []) -> bool:
     for x in users:
-        delete(store,Args(x,"user",name,"group"))
+        delete(store, Args(x, "user", name, "group"))
     return True
 
 
@@ -89,7 +99,7 @@ def inherits(store: BaseAccessStore, name: str, already: list = []) -> list:
     stop an infinite inheritance loop by passing in <already> - a list of groups the function has already seen
     returns None if name does not exist
     """
-    this_inherits = inherits(store,name)
+    this_inherits = inherits(store, name)
     new_inherits = []
     for gname in this_inherits:
         if gname in already:
@@ -104,22 +114,25 @@ def inherits(store: BaseAccessStore, name: str, already: list = []) -> list:
             )
 
     out = list(set([*new_inherits, *already]))
+    print(name, out)
     return out
 
 
 def permissions(store: BaseAccessStore, name: str) -> list:
     """
     get all the permissions to which the group has access
-    
+
     first, get all the groups that it can access
     then, get the list of permissions those granted collectively to those groups
     """
-    this_group_permissions = get_all(store,Args(name,"group",granted_type="permission"))
+    this_group_permissions = get_all(
+        store, Args(name, "group", granted_type="permission")
+    )
 
     groups = inherits(store, name)
     permissions = []
     for gname in groups:
-        gpermissions = get_all(store,Args(gname,"group",granted_type="permission"))
+        gpermissions = get_all(store, Args(gname, "group", granted_type="permission"))
         permissions.extend(gpermissions)
     permissions = list(set([*permissions, *this_group_permissions]))
     return permissions
