@@ -5,7 +5,6 @@ import sqlite3
 import os
 import decimal
 from boto3.dynamodb.types import Binary
-from functools import wraps
 import datetime
 
 from dash_access.clients.base import BaseAccessStore
@@ -19,7 +18,7 @@ def tables():
             permission text,
             ts text,
             status bool
-    )""",
+        )""",
         "admin_events": """
         create table if not exists admin_events (
             ts text,
@@ -27,8 +26,8 @@ def tables():
             operation text,
             vals blob,
             where_val blob
-    )""",
-    "relationships": """
+        )""",
+        "relationships": """
         create table if not exists relationships (
             id text,
             principal text,
@@ -178,17 +177,17 @@ class Sqlite3AccessStore(BaseAccessStore):
         """
         key:
             str, int, float
-            
+
         note on types:
             if value was a dictionary, it transforms back to dictionary and loads
             if value was a int, float, just returns the original value
 
-        returns:            
+        returns:
             The value for the key in the store
             None if key does not exist
 
-        NOTE this simplifies everything by returning the entire record 
-            every time, with default values for missing fields. Otherwise we'd have to do some custom logic. 
+        NOTE this simplifies everything by returning the entire record
+            every time, with default values for missing fields. Otherwise we'd have to do some custom logic.
             It's easier to expect a full record and handle errors later.
         """
         table_fields = self.table_fields(table)
@@ -213,7 +212,7 @@ class Sqlite3AccessStore(BaseAccessStore):
     def _get_all(self, table: str, where: list = None) -> list:
         """
         get all the values from a given table
-        
+
         where:
             can add a WHERE statement
             only AND is allowed
@@ -304,7 +303,7 @@ class Sqlite3AccessStore(BaseAccessStore):
         """
         delete from the table
         where optional
-        
+
         where:
             can add a WHERE statement
             where statements function as ANDs

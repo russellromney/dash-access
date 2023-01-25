@@ -223,7 +223,7 @@ Finally, create the access-controlled app that uses the previously-created datab
 ```python
 # app.py
 import dash
-import dash_html_components as html
+from dash import html
 from dash_access import Controlled
 from server import app
 
@@ -275,3 +275,61 @@ and run it with
 ```sh
 python app.py
 ```
+
+
+# Admin Dashboard
+
+dash-access comes with a built-in administrative dashboard for managing user
+access in your app. Add it to your app like any other multipage app - but protect
+it with dash-access so only specific users (you) can do admin functions at first.
+
+Add the dashboard to your app with Dash Pages:
+```python
+# pages/admin.py
+import dash
+from dash_access import admin_layout
+dash.register_page(__name__, path='/admin') # for example
+
+
+
+```
+
+Or, if you haven't moved to Dash Pages (you should!) use it in your router function
+like any other Dash 1.0 app:
+
+```python
+# routes/admin.py (for example)
+from dash_access.admin import admin_layout
+from dash_access import Controlled
+
+layout = html.Div([
+    Controlled(
+        name="admin",
+        alt="div",
+        component = admin_layout,
+    ),
+])
+```
+
+```python
+# app.py
+import dash_access as da
+...
+app = dash.Dash(__name__) # e.g.
+
+# these callbacks hold the functionality for dash access
+da.register_admin_callbacks(app)
+
+@dash.callback(...)
+def router(...):
+    ...
+    if url == "/admin":
+        if current_user.has_access('admin',config):
+            return admin_layout
+        else:
+            return home_layout # for example
+```
+
+Additionally, it's recommended to not even let non-admin users <know> that 
+there is an admin panel - wrap the link to the admin in a `Controlled(...)`
+component as well with the `"admin"` level.

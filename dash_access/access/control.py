@@ -1,4 +1,5 @@
-import dash_html_components as html
+from dash import html
+from dash import dcc
 from flask_login import current_user
 
 # internal
@@ -6,14 +7,13 @@ from dash_access.access.data import data_access
 from dash_access.access import user
 
 
-def Controlled(name: str = None, alt: str = None, component="", custom_value="", func=None):
+def Controlled(
+    name: str = None, alt: str = None, component="", custom_value="", func=None
+):
     """
     access-control for an arbitrary Dash component
 
     arguments
-        component: 
-            - object subclassing dash.development.base_component.Component or a JSON-serializable type
-            - the component to return if the user has access to it
         name: str
             - the permission's unique name
             - if empty, the permission has no access control and is shown to all users
@@ -25,11 +25,14 @@ def Controlled(name: str = None, alt: str = None, component="", custom_value="",
                 `"div"`: return an `html.Div` that says `"Access Denied"`
                 `"bad"`: return a link that sends the user to your /bad URL (customizable - useful for full-page control)
                 `"custom"`: return a custom value defined in the `custom_value` parameter
-        custom_value: 
+        component:
+            - object subclassing dash.development.base_component.Component or a JSON-serializable type
+            - the component to return if the user has access to it
+        custom_value:
             - object subclassing dash.development.base_component.Component or a JSON-serializable type
             - something custom to return if the user doesn't have access
             - only used if alt="custom"
-        func: 
+        func:
             - a function used to check if the user has access
             - use if you don't want to use the current_user system
     """
